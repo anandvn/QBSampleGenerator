@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="SampleGenerator.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="AppName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">SampleGenerator</Value>
+    </Setting>
+    <Setting Name="AppId" Type="System.Guid" Scope="User">
+      <Value Profile="(Default)">79c98e9a-1d0f-4eaa-b8dd-c2957de02fe2</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
