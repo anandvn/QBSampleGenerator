@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Utilities;
 
@@ -31,6 +33,8 @@ namespace SampleGenerator
         public string Output { get; set; }
         [Option('d', "start", HelpText = "Start Date", Required = true)]
         public DateTime Start { get; set; }
+        [Option('b', "batchsize", HelpText = "Set Batch Size (default = 100)", Required = false, Default = 100)]
+        public int BatchSize { get; set; }
     }
 
     internal class Program
@@ -60,6 +64,7 @@ namespace SampleGenerator
                 status = await qbconnector.ConnectAsync(opts.CompanyFile);
                 qbconnector.Disconnect();
             }
+            Console.WriteLine(status.GetFormattedMessage());
             return status?.Code == ErrorCode.ConnectQBOK ? 0 : 1;
         }
 
@@ -82,22 +87,22 @@ namespace SampleGenerator
                 return -1;
             }
             using (QBSDKWrapper qbconnector = new QBSDKWrapper())
-            using (StreamWriter sw = new StreamWriter(opts.Output))
             {
                 Status status = await qbconnector.ConnectAsync(opts.CompanyFile);
                 Console.WriteLine(status.GetFormattedMessage());
                 if (status.Code != ErrorCode.ConnectQBOK) 
                     return -1;
 
-                ICollection<InventoryTransfer> batch;
                 using (ProgressBar pbar = new ProgressBar())
+                using (StreamWriter sw = new StreamWriter(opts.Output))
                 {
-                    while ((batch = await qbconnector.GetBillsAsync(opts.Start, 100)) != null)
+                    ICollection<InventoryTransfer> batch;
+                    while ((batch = await qbconnector.GetBillsAsync(opts.Start, opts.BatchSize)) != null)
                     {
                         foreach (InventoryTransfer item in batch)
                         {
                             counter++;
-                            sw.WriteLine($"{item.Date.ToShortDateString()},{item.ReferenceNum},{item.DueDate.ToShortDateString()},{item.Items.Sum(x => x.Quantity * x.Price) + item.Expenses.Sum(x => x.Amount)}");
+                            sw.WriteLine($"{item.Date.ToShortDateString()},{item.ReferenceNum},{item.DueDate.ToShortDateString()},{item.Items.Sum(x => x.Quantity * x.Price) + item.Expenses.Sum(x => x.Amount)},{item.GetAttachedDocumentName(qbconnector.AttachDir)}");
                             pbar.Report(counter / (double)qbconnector.ItemCount);
                         }
                     }
