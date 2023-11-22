@@ -39,9 +39,6 @@
     <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="ShellProgressBar, Version=5.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ShellProgressBar.5.2.0\lib\net461\ShellProgressBar.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
@@ -75,10 +72,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Model\Business.cs" />
     <Compile Include="Model\ExpenseEntry.cs" />
     <Compile Include="Model\InventoryTransfer.cs" />
     <Compile Include="Model\ItemEntry.cs" />
+    <Compile Include="ProgressBar.cs" />
+    <Compile Include="QBSDKWrapper.cs" />
     <Compile Include="SessionFramework\ENEdition.cs" />
     <Compile Include="Utilities\EnumUtils.cs" />
     <Compile Include="Utilities\NameIDPair.cs" />

@@ -577,6 +577,50 @@ namespace SessionFramework
             }
         }
 
+        public string getIteratorID(bool logError = true)
+        {
+            try
+            {
+                if (_queryResponse.ResponseList == null || _queryResponse.ResponseList.GetAt(0) == null)
+                {
+                    if (logError)
+                        log.Error("SessionManager.gerIteratorID: Detected a problem trying to obtain the response object");
+
+                    throw new Exception("Detected a problem trying to obtain the response object");
+                }
+                return getResponseList(false).GetAt(0).iteratorID;
+            }
+            catch (Exception e)
+            {
+                if (logError)
+                    log.Error("SessionManager.getResponse", e);
+
+                throw e;
+            }
+        }
+
+        public int getIteratorRemainingCount(bool logError = true)
+        {
+            try
+            {
+                if (_queryResponse.ResponseList == null || _queryResponse.ResponseList.GetAt(0) == null)
+                {
+                    if (logError)
+                        log.Error("SessionManager.getIteratorRemainingCount: Detected a problem trying to obtain the response object");
+
+                    throw new Exception("Detected a problem trying to obtain the response object");
+                }
+                return getResponseList(false).GetAt(0).iteratorRemainingCount;
+            }
+            catch (Exception e)
+            {
+                if (logError)
+                    log.Error("SessionManager.getResponse", e);
+
+                throw e;
+            }
+        }
+
 
         // ************************************************************************
         // ************************************************************************

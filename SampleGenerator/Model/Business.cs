@@ -9,6 +9,7 @@ namespace SampleGenerator.Model
     public class Business
     {
         public string QBTermsID { get; set; }
+        public string QBListID { get; set; }
         public string Name { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
