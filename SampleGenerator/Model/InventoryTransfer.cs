@@ -95,14 +95,9 @@ namespace SampleGenerator.Model
             DirectoryInfo directoryInfo = new DirectoryInfo(path);
             FileInfo[] files = directoryInfo.GetFiles();
             string filename = string.Empty;
-            foreach (var file in files)
-            {
-                if (file.Extension == ".pdf")
-                {
-                    filename = file.FullName;
-                    break;
-                }
-            }
+            FileInfo file = files.FirstOrDefault(x => x.Extension == ".pdf");
+            if (file != null)
+                filename = file.FullName;
             return filename;
         }
     }
