@@ -3,8 +3,8 @@ Generate Invoice Samples from Quickbooks datafile
 
 ## Purpose
 Generate Samples to be used in Machine Learning Models from a Quickbooks datafile.  Quickbooks desktop allows
-a user to "attach" documents to records as they are posted to Quickbooks. This allows use to create labeled samples 
-using the data already human verified inside Quickbooks.
+a user to "attach" documents to records as they are posted to Quickbooks. This allows us to create labeled samples 
+using the data that has already been human verified.
 
 ### Credits
 * ProgressBar https://gist.github.com/DanielSWolf
