@@ -1,12 +1,12 @@
-﻿using System;
+﻿using CommandLine;
+using log4net.Repository.Hierarchy;
+using SampleGenerator.Model;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using QBFC15Lib;
-using SessionFramework;
-using CommandLine;
-using System.Runtime.InteropServices;
+using Utilities;
 
 namespace SampleGenerator
 {
@@ -27,22 +27,24 @@ namespace SampleGenerator
     internal class GenerateOptions : Options
     {
         public GenerateOptions() { }
-        [Option('a', "attachdir", HelpText = "Attachment Directory", Required = true)]
-        public string AttachDir { get; set; }
+        [Option('o', "output", HelpText = "Output CSV File", Required = true)]
+        public string Output { get; set; }
+        [Option('d', "start", HelpText = "Start Date", Required = true)]
+        public DateTime Start { get; set; }
     }
 
     internal class Program
     {
-        static int Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
-            return CommandLine.Parser.Default.ParseArguments<AuthOptions, GenerateOptions>(args)
+            return await CommandLine.Parser.Default.ParseArguments<AuthOptions, GenerateOptions>(args)
                 .MapResult(
                     (AuthOptions opts) => AuthorizeApp(opts),
                     (GenerateOptions opts) => GenerateSamples(opts),
-                    errs => 1);
+                    errs => Task.FromResult(-1));
         }
 
-        private static int AuthorizeApp(AuthOptions opts)
+        private static async Task<int> AuthorizeApp(AuthOptions opts)
         {
             if (!System.IO.File.Exists(opts.CompanyFile))
             {
@@ -52,66 +54,58 @@ namespace SampleGenerator
             Console.WriteLine("Open Quickbooks Company file as admin in Multi-User Mode and press any key to continue...");
             Console.ReadKey();
             Console.WriteLine($"Connecting to {opts.CompanyFile}");
-            using (SessionManager session = SessionManager.getInstance())
+            Status status;
+            using(QBSDKWrapper qbconnector = new QBSDKWrapper())
             {
-                session.openConnection(ENConnectionType.ctLocalQBD);
-                string message = "Connection Successful.";
-                try
-                {
-                    session.beginSession(opts.CompanyFile, ENOpenMode.omDontCare);
-                } catch (Exception ex)
-                {
-                    if (ex is COMException exception)
-                    {
-                        switch (exception.ErrorCode)
-                        {
-                            case unchecked((int)0x8004040A):
-                                message = exception.Message;
-                                break;
-                            case unchecked((int)0x80040410):
-                                message = "Quickbooks is currently open in Single User Mode.  Either close the company file, or re-open it in multi-user mode.";
-                                break;
-                            case unchecked((int)0x80040414):
-                                message = "There is a window open in Quickbooks preventing QBConnector from accessing it.  Please close the window or the company in Quickbooks.";
-                                break;
-                            case unchecked((int)0x8004041B):
-                                message = exception.Message;
-                                break;
-                            case unchecked((int)0x80040422):
-                                message = exception.Message;
-                                break;
-                            default:
-                                message = exception.Message;
-                                break;
-                        }
-                    } else 
-                    { 
-                        message = ex.Message; 
-                    }
-                }
-                Console.Write(message);
-                session.endSession();
-                session.closeConnection();
+                status = await qbconnector.ConnectAsync(opts.CompanyFile);
+                qbconnector.Disconnect();
             }
-            return 1;
+            return status?.Code == ErrorCode.ConnectQBOK ? 0 : 1;
         }
 
-        private static int GenerateSamples(GenerateOptions opts)
+        private static async Task<int> GenerateSamples(GenerateOptions opts)
         {
+            double counter = 0;
             if (!System.IO.File.Exists(opts.CompanyFile))
             {
                 Console.WriteLine($"Company File does not exist: {opts.CompanyFile}");
-                return 1;
+                return -1;
             }
-            using (SessionManager session = SessionManager.getInstance())
+            if (opts.Output == string.Empty)
             {
-                session.openConnection(ENConnectionType.ctLocalQBD);
-                session.beginSession(opts.CompanyFile, ENOpenMode.omDontCare);
-
-                session.endSession();
-                session.closeConnection();
+                Console.WriteLine("Specify an output file");
+                return -1; 
             }
-            return 1;
+            if (opts.Start == null)
+            {
+                Console.WriteLine("Invalid Start Date");
+                return -1;
+            }
+            using (QBSDKWrapper qbconnector = new QBSDKWrapper())
+            using (StreamWriter sw = new StreamWriter(opts.Output))
+            {
+                Status status = await qbconnector.ConnectAsync(opts.CompanyFile);
+                Console.WriteLine(status.GetFormattedMessage());
+                if (status.Code != ErrorCode.ConnectQBOK) 
+                    return -1;
+
+                ICollection<InventoryTransfer> batch;
+                using (ProgressBar pbar = new ProgressBar())
+                {
+                    while ((batch = await qbconnector.GetBillsAsync(opts.Start, 100)) != null)
+                    {
+                        foreach (InventoryTransfer item in batch)
+                        {
+                            counter++;
+                            sw.WriteLine($"{item.Date.ToShortDateString()},{item.ReferenceNum},{item.DueDate.ToShortDateString()},{item.Items.Sum(x => x.Quantity * x.Price) + item.Expenses.Sum(x => x.Amount)}");
+                            pbar.Report(counter / (double)qbconnector.ItemCount);
+                        }
+                    }
+                }
+                qbconnector.Disconnect();
+            }
+            return 0;
         }
+
     }
 }

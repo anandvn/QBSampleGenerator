@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QBFC15Lib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,8 +20,6 @@ namespace SampleGenerator.Model
         public string ReferenceNum { get; set; }
         public string PONumber { get; set; }
         public string Memo { get; set; }
-        public bool ToBePrinted { get; set; }
-        public bool ToBeEmailed { get; set; }
         public ICollection<ItemEntry> Items { get; set; }
         public ICollection<ExpenseEntry> Expenses { get; set; }
         public string EditSequence { get; set; }
@@ -31,6 +30,58 @@ namespace SampleGenerator.Model
         {
             Items = new HashSet<ItemEntry>();
             Expenses = new HashSet<ExpenseEntry>();
+        }
+
+        public static InventoryTransfer Create(IBillRet billret)
+        {
+            var bill = new InventoryTransfer()
+            {
+                Items = new List<ItemEntry>(),
+                Expenses = new List<ExpenseEntry>(),
+                Date = billret.TxnDate.GetValue(),
+                DueDate = billret.DueDate != null ? billret.DueDate.GetValue() : billret.TxnDate.GetValue(),
+                TxnID = billret.TxnID.GetValue(),
+                EditSequence = billret.EditSequence.GetValue(),
+                ReferenceNum = billret.RefNumber != null ? billret.RefNumber.GetValue() : string.Empty,
+                Memo = billret.Memo != null ? billret.Memo.GetValue() : string.Empty,
+                QBTermsID = billret.TermsRef != null ? billret.TermsRef.ListID.GetValue() : string.Empty,
+                QBEntityID = billret.VendorRef.ListID.GetValue(),
+            };
+            if ((billret.ORItemLineRetList != null) && (billret.ORItemLineRetList.Count > 0))
+            {
+                for (int i = 0; i <= billret.ORItemLineRetList.Count - 1; i++)
+                {
+                    IORItemLineRet line = billret.ORItemLineRetList.GetAt(i);
+                    ItemEntry entry = new ItemEntry()
+                    {
+                        Price = line.ItemLineRet.Cost != null ? (decimal)line.ItemLineRet.Cost.GetValue() : (decimal)line.ItemLineRet.Amount.GetValue(),
+                        Quantity = line.ItemLineRet.Quantity != null ? (decimal)line.ItemLineRet.Quantity.GetValue() : 1.0M,
+                        TxnID = line.ItemLineRet.TxnLineID.GetValue(),
+                        Description = line.ItemLineRet.Desc != null ? line.ItemLineRet.Desc.GetValue() : string.Empty,
+                        ItemLookupCode = line.ItemLineRet.ItemRef != null ? line.ItemLineRet.ItemRef.FullName.GetValue() : string.Empty,
+                    };
+                    bill.Items.Add(entry);
+                }
+            }
+
+            if ((billret.ExpenseLineRetList != null) && (billret.ExpenseLineRetList.Count > 0))
+            {
+                for (int i = 0; i <= billret.ExpenseLineRetList.Count - 1; i++)
+                {
+                    IExpenseLineRet line = billret.ExpenseLineRetList.GetAt(i);
+
+                    ExpenseEntry entry = new ExpenseEntry()
+                    {
+                        Amount = line.Amount != null ? (decimal)line.Amount.GetValue() : 0.0M,
+                        Memo = line.Memo != null ? line.Memo.GetValue() : string.Empty,
+                        Description = line.AccountRef != null ? line.AccountRef.FullName.GetValue() : string.Empty,
+                        QBAcctID = line.AccountRef != null ? line.AccountRef.ListID.GetValue() : string.Empty,
+                        TxnID = line.TxnLineID.GetValue()
+                    };
+                    bill.Expenses.Add(entry);
+                }
+            }
+            return bill;
         }
     }
 }
