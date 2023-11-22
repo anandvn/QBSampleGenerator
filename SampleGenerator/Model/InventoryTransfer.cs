@@ -1,6 +1,9 @@
-﻿using QBFC15Lib;
+﻿using log4net.Util;
+using Microsoft.SqlServer.Server;
+using QBFC15Lib;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -82,6 +85,25 @@ namespace SampleGenerator.Model
                 }
             }
             return bill;
+        }
+
+        public string GetAttachedDocumentName(string basePath)
+        {
+            string path = basePath + "800" + TxnID;
+            if (!System.IO.Directory.Exists(path))
+                return string.Empty;
+            DirectoryInfo directoryInfo = new DirectoryInfo(path);
+            FileInfo[] files = directoryInfo.GetFiles();
+            string filename = string.Empty;
+            foreach (var file in files)
+            {
+                if (file.Extension == ".pdf")
+                {
+                    filename = file.FullName;
+                    break;
+                }
+            }
+            return filename;
         }
     }
 }
