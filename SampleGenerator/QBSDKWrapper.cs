@@ -1,97 +1,31 @@
 ﻿using QBFC15Lib;
+using QBSDKWrapper;
 using SampleGenerator.Model;
-using SessionFramework;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel.Design;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using Utilities;
 
 namespace SampleGenerator
 {
-    public class QBSDKWrapper : IDisposable
+    public class QBSDKWrapper : QBSDKWrapperBase
     {
-        static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly SessionManager sessionMgr;
         private string billIteratorID;
         private int iteratorRemainingCount = 0;
-        public string AttachDir { get; private set; }
-        public string CompanyFile { get; private set; }
         public int ItemCount { get; private set; }
-
-        public QBSDKWrapper()
+        public QBSDKWrapper() : base(SampleGenerator.Properties.Settings.Default.AppId.ToString(), SampleGenerator.Properties.Settings.Default.AppName)
         {
-            sessionMgr = SessionManager.getInstance();
             billIteratorID = string.Empty;
         }
 
-        public Status Connect(string companyFile)
-        {
-            CompanyFile = companyFile;
-            string companydir = Path.GetFileNameWithoutExtension(companyFile);
-            string companyfilepath = Path.GetDirectoryName(companyFile);
-            AttachDir = companyfilepath + @"\attach\" + companydir + @"\Txn\";
-            // One Connect to rule them all
-            string message = "Unknown Error Connecting to Quickbooks";
-            ErrorCode code = ErrorCode.ConnectQBFailed;
-            try
-            {
-                sessionMgr.beginSession(companyFile);
-                message = "Connected to Quickbooks Successfully.";
-                code = ErrorCode.ConnectQBOK;
-            }
-            catch (Exception except)
-            {
-                log.Info("Connect", except);
-                if (except is COMException exception)
-                {
-                    code = ErrorCode.NoConnection;
-                    switch (exception.ErrorCode)
-                    {
-                        case unchecked((int)0x8004040A):
-                            message = exception.Message;
-                            break;
-                        case unchecked((int)0x80040410):
-                            message = "Quickbooks is currently open in Single User Mode.  Either close the company file, or re-open it in multi-user mode.";
-                            break;
-                        case unchecked((int)0x80040414):
-                            message = "There is a window open in Quickbooks preventing QBConnector from accessing it.  Please close the window or the company in Quickbooks.";
-                            break;
-                        case unchecked((int)0x8004041B):
-                            message = exception.Message;
-                            break;
-                        case unchecked((int)0x80040422):
-                            message = exception.Message;
-                            break;
-                        default:
-                            message = exception.Message;
-                            break;
-                    }
-                }
-                else
-                {
-                    message = except.Message;
-                    code = ErrorCode.NoConnection;
-                }
-            }
-            return new Status(message, code, 0);
-        }
-
-        public async Task<Status> ConnectAsync(string companyFile)
-        {
-            return await Task.Run(() => Connect(companyFile));
-        }
-
-        public void Disconnect()
-        {
-            sessionMgr.endSession();
-        }
-        
+        /// <summary>
+        /// Async Method to load bills after a specified date.  Meant to be called until the list returned is null;
+        /// </summary>
+        /// <param name="start">Start Date for Bills</param>
+        /// <param name="chunksize">How many bills to return after each call</param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public async Task<ICollection<InventoryTransfer>> GetBillsAsync(DateTime start, int chunksize = 100)
         {
             if (iteratorRemainingCount < 0)
@@ -284,32 +218,6 @@ namespace SampleGenerator
             return retlist;
         }
 
-        #region IDisposable Members
-        // Flag: Has Dispose already been called?
-        private bool disposed = false;
 
-        // Public implementation of Dispose pattern callable by consumers.
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        // Protected implementation of Dispose pattern.
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                // Free any managed objects here.
-                //
-            }
-            // Free any unmanaged resources here.
-            Disconnect();
-            disposed = true;
-        }
-        #endregion
     }
 }

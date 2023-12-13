@@ -1,14 +1,11 @@
 ﻿using CommandLine;
-using log4net.Repository.Hierarchy;
 using SampleGenerator.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
-using Utilities;
+using QBSDKWrapper;
 
 namespace SampleGenerator
 {
