@@ -39,6 +39,9 @@
     <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="QBSDKWrapper">
+      <HintPath>..\..\QBSDKWrapper\QBSDKWrapper\bin\Release\QBSDKWrapper.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
@@ -79,7 +82,6 @@
     <Compile Include="Model\ItemEntry.cs" />
     <Compile Include="ProgressBar.cs" />
     <Compile Include="QBSDKWrapper.cs" />
-    <Compile Include="SessionFramework\ENEdition.cs" />
     <Compile Include="Utilities\EnumUtils.cs" />
     <Compile Include="Utilities\NameIDPair.cs" />
     <Compile Include="Program.cs" />
@@ -89,13 +91,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="SessionFramework\QBException.cs" />
-    <Compile Include="SessionFramework\QBNoResponseException.cs" />
-    <Compile Include="SessionFramework\QBResultException.cs" />
-    <Compile Include="SessionFramework\SessionManager.cs" />
-    <Compile Include="Utilities\Status.cs" />
-    <Compile Include="SessionFramework\VistaException.cs" />
-    <Compile Include="SessionFramework\VistaTools.cs" />
+    <Compile Include="Utilities\StringExt.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
