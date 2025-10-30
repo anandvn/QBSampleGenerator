@@ -1,11 +1,11 @@
 ﻿using CommandLine;
+using QBSDKWrapper.Utils;
 using SampleGenerator.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using QBSDKWrapper;
 
 namespace SampleGenerator
 {
@@ -40,32 +40,32 @@ namespace SampleGenerator
         {
             return await CommandLine.Parser.Default.ParseArguments<AuthOptions, GenerateOptions>(args)
                 .MapResult(
-                    (AuthOptions opts) => AuthorizeApp(opts),
-                    (GenerateOptions opts) => GenerateSamples(opts),
+                    (AuthOptions opts) => authorizeApp(opts),
+                    (GenerateOptions opts) => generateSamples(opts),
                     errs => Task.FromResult(-1));
         }
 
-        private static async Task<int> AuthorizeApp(AuthOptions opts)
+        private static async Task<int> authorizeApp(AuthOptions opts)
         {
             if (!System.IO.File.Exists(opts.CompanyFile))
             {
                 Console.WriteLine($"Company File does not exist: {opts.CompanyFile}");
                 return 1;
             }
-            Console.WriteLine("Open Quickbooks Company file as admin in Multi-User Mode and press any key to continue...");
+            Console.WriteLine("Open Quickbooks Company file as admin in Single-User Mode and press any key to continue...");
             Console.ReadKey();
             Console.WriteLine($"Connecting to {opts.CompanyFile}");
             Status status;
             using(QBSDKWrapper qbconnector = new QBSDKWrapper())
             {
-                status = await qbconnector.ConnectAsync(opts.CompanyFile);
+                status = await qbconnector.ConnectAsync(opts.CompanyFile, true);
                 qbconnector.Disconnect();
             }
             Console.WriteLine(status.GetFormattedMessage());
             return status?.Code == ErrorCode.ConnectQBOK ? 0 : 1;
         }
 
-        private static async Task<int> GenerateSamples(GenerateOptions opts)
+        private static async Task<int> generateSamples(GenerateOptions opts)
         {
             double counter = 0;
             if (!System.IO.File.Exists(opts.CompanyFile))
