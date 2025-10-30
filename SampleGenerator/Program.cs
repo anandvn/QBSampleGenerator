@@ -92,7 +92,7 @@ namespace SampleGenerator
             }
             using (QBSDKWrapper qbconnector = new QBSDKWrapper())
             {
-                Status status = await qbconnector.ConnectAsync(opts.CompanyFile);
+                Status status = await qbconnector.ConnectAsync(opts.CompanyFile, true);
                 Console.WriteLine(status.GetFormattedMessage());
                 if (status.Code != ErrorCode.ConnectQBOK) 
                     return -1;
