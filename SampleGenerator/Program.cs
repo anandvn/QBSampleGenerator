@@ -38,11 +38,18 @@ namespace SampleGenerator
     {
         static async Task<int> Main(string[] args)
         {
-            return await CommandLine.Parser.Default.ParseArguments<AuthOptions, GenerateOptions>(args)
-                .MapResult(
-                    (AuthOptions opts) => authorizeApp(opts),
-                    (GenerateOptions opts) => generateSamples(opts),
-                    errs => Task.FromResult(-1));
+            try
+            {
+                return await CommandLine.Parser.Default.ParseArguments<AuthOptions, GenerateOptions>(args)
+                    .MapResult(
+                        (AuthOptions opts) => authorizeApp(opts),
+                        (GenerateOptions opts) => generateSamples(opts),
+                        errs => Task.FromResult(-1));
+            } catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+                return -1;
+            }
         }
 
         private static async Task<int> authorizeApp(AuthOptions opts)
